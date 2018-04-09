@@ -1,0 +1,2 @@
+ccmake3 -DENABLE_FOLLY=false -DBOOST_ROOT=$PREFIX -DCMAKE_C_FLAGS='-g -rdynamic -pg -finstrument-functions -finstrument-functions-exclude-file-list=/usr/include/c++ ' -DCMAKE_CXX_FLAGS='-g -rdynamic -pg -finstrument-functions -finstrument-functions-exclude-file-list=/usr/include/c++ ' -DCUDA_USE_STATIC_CUDA_RUNTIME=off -DCMAKE_INSTALL_PREFIX=/home/shhxyao/huaxin/tools/mapd/3.3.1/mapd-core-profile ../
+
