@@ -520,6 +520,7 @@ void MapDHandler::sql_execute(TQueryResult& _return,
                               const std::string& nonce,
                               const int32_t first_n,
                               const int32_t at_most_n) {
+  LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": query_str: "<< query_str << "; column_format: " << column_format;
   if (first_n >= 0 && at_most_n >= 0) {
     TMapDException ex;
     ex.error_msg = std::string("At most one of first_n and at_most_n can be set");
@@ -1942,10 +1943,14 @@ void MapDHandler::execute_rel_alg(TQueryResult& _return,
       measure<>::execution([&]() { result = ra_executor.executeRelAlgQuery(query_ra, co, eo, nullptr); });
   // reduce execution time by the time spent during queue waiting
   _return.execution_time_ms -= result.getRows()->getQueueTime();
+  _return.queue_time_ms     += result.getRows()->getQueueTime();
   if (just_explain) {
     convert_explain(_return, *result.getRows(), column_format);
   } else {
-    convert_rows(_return, result.getTargetsMeta(), *result.getRows(), column_format, first_n, at_most_n);
+    _return.convert_to_row_time_ms =
+    measure<>::execution([&]() {
+      convert_rows(_return, result.getTargetsMeta(), *result.getRows(), column_format, first_n, at_most_n);
+    });
   }
 }
 
@@ -2203,7 +2208,10 @@ void MapDHandler::sql_execute_impl(TQueryResult& _return,
                                    const int32_t first_n,
                                    const int32_t at_most_n) {
   _return.nonce = nonce;
+  _return.parsing_time_ms = 0;
+  _return.queue_time_ms   = 0;
   _return.execution_time_ms = 0;
+  _return.convert_to_row_time_ms = 0;
   auto& cat = session_info.get_catalog();
   LOG(INFO) << query_str;
   _return.total_time_ms = measure<>::execution([&]() {
@@ -2216,7 +2224,8 @@ void MapDHandler::sql_execute_impl(TQueryResult& _return,
       ParserWrapper pw{query_str};
       if (!pw.is_ddl && !pw.is_update_dml && !pw.is_other_explain) {
         std::string query_ra;
-        _return.execution_time_ms += measure<>::execution([&]() { query_ra = parse_to_ra(query_str, session_info); });
+        _return.parsing_time_ms += measure<>::execution([&]() { query_ra = parse_to_ra(query_str, session_info); });
+        LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": query_ra: " << std::endl << query_ra ;
         if (pw.is_select_calcite_explain) {
           // return the ra as the result
           convert_explain(_return, ResultSet(query_ra), true);
@@ -2310,7 +2319,11 @@ void MapDHandler::sql_execute_impl(TQueryResult& _return,
       }
     }
   });
-  LOG(INFO) << "Total: " << _return.total_time_ms << " (ms), Execution: " << _return.execution_time_ms << " (ms)";
+  LOG(INFO) << "Total: " << _return.total_time_ms << " (ms), "
+            << "Parsing: " << _return.parsing_time_ms << " (ms), "
+            << "Queue: " << _return.queue_time_ms << " (ms), "
+            << "Execution: " << _return.execution_time_ms << " (ms), "
+            << "Convert to row: " << _return.convert_to_row_time_ms << " (ms)";
 }
 
 void MapDHandler::execute_distributed_copy_statement(Parser::CopyTableStmt* copy_stmt,

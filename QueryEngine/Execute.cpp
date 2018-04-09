@@ -1190,6 +1190,7 @@ void Executor::dispatchFragments(
                              query_mem_desc.hash_type == GroupByColRangeType::Projection);
 
   if ((device_type == ExecutorDeviceType::GPU) && allow_multifrag && is_agg) {
+    LOG(INFO) << "Huaxin: " << "Eecuted on GPU, and allow_multifrag == true, and is_agg == true";
     // NB: We should never be on this path when the query is retried because of
     //     running out of group by slots; also, for scan only queries (!agg_plan)
     //     we want the high-granularity, fragment by fragment execution instead.
@@ -1198,8 +1199,15 @@ void Executor::dispatchFragments(
     // devices. The basic idea: the device is decided by the outer table in the
     // query (the first table in a join) and we need to broadcast the fragments
     // in the inner table to each device. Sharding will change this model.
+    //LOG(INFO) << "Huaxin: " << "outer_fragments->size(): " << outer_fragments->size();
     for (size_t outer_frag_id = 0; outer_frag_id < outer_fragments->size(); ++outer_frag_id) {
       const auto& fragment = (*outer_fragments)[outer_frag_id];
+      LOG(INFO) << "Huaxin: " << "fragmentId: "         << fragment.fragmentId << ", "
+                              << "fragment shard: "     << fragment.shard << ", "
+                              << "fragment deviceIds: " << fragment.deviceIds[static_cast<int>(Data_Namespace::GPU_LEVEL)] << ", "
+                              << "NumTuples: "          << fragment.getNumTuples() << ", "
+                              << "PhysicalNumTuples: "  << fragment.getPhysicalNumTuples();
+
       const auto skip_frag =
           skipFragment(outer_table_desc, fragment, ra_exe_unit.simple_quals, execution_dispatch, outer_frag_id);
       if (skip_frag.first) {
@@ -1537,6 +1545,7 @@ Executor::FetchResult Executor::fetchChunks(const ExecutionDispatch& execution_d
                                             const Catalog_Namespace::Catalog& cat,
                                             std::list<ChunkIter>& chunk_iterators,
                                             std::list<std::shared_ptr<Chunk_NS::Chunk>>& chunks) {
+  LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: ";
   const auto& col_global_ids = ra_exe_unit.input_col_descs;
   std::vector<std::vector<size_t>> selected_fragments_crossjoin;
   std::vector<size_t> local_col_to_frag_pos;
@@ -1555,6 +1564,8 @@ Executor::FetchResult Executor::fetchChunks(const ExecutionDispatch& execution_d
       ra_exe_unit.join_dimensions.size() > 2 && dynamic_cast<Analyzer::IterExpr*>(ra_exe_unit.target_exprs.front());
 
   for (const auto& selected_frag_ids : frag_ids_crossjoin) {
+    LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": "
+              << "Huaxin: " ;
     std::vector<const int8_t*> frag_col_buffers(plan_state_->global_to_local_col_ids_.size());
     for (const auto& col_id : col_global_ids) {
       CHECK(col_id);
@@ -1579,6 +1590,9 @@ Executor::FetchResult Executor::fetchChunks(const ExecutionDispatch& execution_d
         return {};
       }
       CHECK_LT(frag_id, fragments->size());
+      LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": "
+                << "Huaxin: " << "ColumnName: " << cd->columnName << "; "
+                << "From frag_id: " << frag_id ;
       auto memory_level_for_column = memory_level;
       if (plan_state_->columns_to_fetch_.find(std::make_pair(col_id->getScanDesc().getTableId(), col_id->getColId())) ==
           plan_state_->columns_to_fetch_.end()) {
@@ -1588,6 +1602,7 @@ Executor::FetchResult Executor::fetchChunks(const ExecutionDispatch& execution_d
       const bool is_real_string = col_type.is_string() && col_type.get_compression() == kENCODING_NONE;
       if (col_id->getScanDesc().getSourceType() == InputSourceType::RESULT) {
         CHECK(!is_real_string && !col_type.is_array());
+        LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: ";
         frag_col_buffers[it->second] = execution_dispatch.getColumn(col_id.get(),
                                                                     frag_id,
                                                                     all_tables_fragments,
@@ -1598,11 +1613,13 @@ Executor::FetchResult Executor::fetchChunks(const ExecutionDispatch& execution_d
       } else {
 #ifdef ENABLE_MULTIFRAG_JOIN
         if (needFetchAllFragments(*col_id, ra_exe_unit, selected_fragments)) {
+          LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: ";
           frag_col_buffers[it->second] = execution_dispatch.getAllScanColumnFrags(
               table_id, col_id->getColId(), all_tables_fragments, memory_level_for_column, device_id);
         } else
 #endif
         {
+          LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: ";
           frag_col_buffers[it->second] = execution_dispatch.getScanColumn(table_id,
                                                                           frag_id,
                                                                           col_id->getColId(),

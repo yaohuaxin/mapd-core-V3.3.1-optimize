@@ -225,6 +225,8 @@ void Executor::ExecutionDispatch::runImpl(const ExecutorDeviceType chosen_device
       const auto& fragments = query_infos_[extra_tab_base + tab_idx].info.fragments;
       all_tables_fragments.insert(std::make_pair(table_id, &fragments));
     }
+
+    // Huaxin:
     fetch_result = executor_->fetchChunks(*this,
                                           ra_exe_unit_,
                                           chosen_device_id,
@@ -522,6 +524,10 @@ void Executor::ExecutionDispatch::run(const ExecutorDeviceType chosen_device_typ
   }
 }
 
+/*
+ * Huaxin: chunk_holder: hold the chunks returned
+ * Huaxin: If for non-variable column, return the buffer; for variable column return ChunkIter for describing the buffer.
+ */
 const int8_t* Executor::ExecutionDispatch::getScanColumn(
     const int table_id,
     const int frag_id,
@@ -538,7 +544,7 @@ const int8_t* Executor::ExecutionDispatch::getScanColumn(
   const auto fragments = fragments_it->second;
   const auto& fragment = (*fragments)[frag_id];
   std::shared_ptr<Chunk_NS::Chunk> chunk;
-  auto chunk_meta_it = fragment.getChunkMetadataMap().find(col_id);
+  auto chunk_meta_it = fragment.getChunkMetadataMap().find(col_id);    // Huaxin: chunk_meta_it is for per column
   CHECK(chunk_meta_it != fragment.getChunkMetadataMap().end());
   CHECK(table_id > 0);
   auto cd = get_column_descriptor(col_id, table_id, cat_);
@@ -559,6 +565,8 @@ const int8_t* Executor::ExecutionDispatch::getScanColumn(
                                       memory_level == Data_Namespace::CPU_LEVEL ? 0 : device_id,
                                       chunk_meta_it->second.numBytes,
                                       chunk_meta_it->second.numElements);
+    /*LOG(INFO) << "Huaxin: " << "Chunk numByters: " << chunk_meta_it->second.numBytes << "; "
+                            << "Chunk numElements: " << chunk_meta_it->second.numElements;*/
     std::lock_guard<std::mutex> chunk_list_lock(chunk_list_mutex);
     chunk_holder.push_back(chunk);
   }

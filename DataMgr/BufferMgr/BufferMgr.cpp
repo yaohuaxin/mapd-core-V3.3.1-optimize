@@ -23,6 +23,7 @@
 #include "Buffer.h"
 #include "Shared/measure.h"
 
+#include <thread>
 #include <algorithm>
 #include <limits>
 #include <iomanip>
@@ -243,6 +244,7 @@ BufferList::iterator BufferMgr::findFreeBuffer(size_t numBytes) {
   size_t numPagesRequested = (numBytes + pageSize_ - 1) / pageSize_;
   if (numPagesRequested > maxNumPagesPerSlab_) {
     throw SlabTooBig();  //@todo change to requested allocation too big
+    // Huaxin: can use UVM instead
   }
 
   size_t numSlabs = slabSegments_.size();
@@ -657,6 +659,8 @@ AbstractBuffer* BufferMgr::getBuffer(const ChunkKey& key, const size_t numBytes)
   bool foundBuffer = bufferIt != chunkIndex_.end();
   chunkIndexLock.unlock();
   if (foundBuffer) {
+    LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: "
+              << "Found column in buffer.";
     CHECK(bufferIt->second->buffer);
     bufferIt->second->buffer->pin();
     sizedSegsLock.unlock();
@@ -666,10 +670,14 @@ AbstractBuffer* BufferMgr::getBuffer(const ChunkKey& key, const size_t numBytes)
     }
     return bufferIt->second->buffer;
   } else {  // If wasn't in pool then we need to fetch it
+    LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: "
+              << "Not found column in buffer.";
     sizedSegsLock.unlock();
     AbstractBuffer* buffer = createBuffer(key, pageSize_, numBytes);  // createChunk pins for us
     try {
       parentMgr_->fetchBuffer(key, buffer, numBytes);  // this should put buffer in a BufferSegment
+      /*LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: "
+                << "typeid(parentMgr_): " << typeid(parentMgr_).name();*/
     } catch (std::runtime_error& error) {
       LOG(FATAL) << "Get chunk - Could not find chunk " << keyToString(key)
                  << " in buffer pool or parent buffer pools. Error was " << error.what();
@@ -679,6 +687,7 @@ AbstractBuffer* BufferMgr::getBuffer(const ChunkKey& key, const size_t numBytes)
 }
 
 void BufferMgr::fetchBuffer(const ChunkKey& key, AbstractBuffer* destBuffer, const size_t numBytes) {
+  LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: ";
   std::unique_lock<std::mutex> lock(globalMutex_);  // granular lock
   std::unique_lock<std::mutex> sizedSegsLock(sizedSegsMutex_);
   std::unique_lock<std::mutex> chunkIndexLock(chunkIndexMutex_);

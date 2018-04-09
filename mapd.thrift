@@ -125,9 +125,12 @@ struct TRowSet {
 
 struct TQueryResult {
   1: TRowSet row_set
-  2: i64 execution_time_ms
-  3: i64 total_time_ms
-  4: string nonce
+  2: i64 parsing_time_ms
+  3: i64 queue_time_ms
+  4: i64 execution_time_ms
+  5: i64 convert_to_row_time_ms
+  6: i64 total_time_ms
+  7: string nonce
 }
 
 struct TDataFrame {

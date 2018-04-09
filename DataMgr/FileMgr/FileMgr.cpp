@@ -609,6 +609,7 @@ AbstractBuffer* FileMgr::getBuffer(const ChunkKey& key, const size_t numBytes) {
 }
 
 void FileMgr::fetchBuffer(const ChunkKey& key, AbstractBuffer* destBuffer, const size_t numBytes) {
+  LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: ";
   // reads chunk specified by ChunkKey into AbstractBuffer provided by
   // destBuffer
   if (destBuffer->isDirty()) {

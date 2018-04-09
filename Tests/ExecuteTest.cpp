@@ -167,7 +167,8 @@ class SQLiteComparator {
                     bool timestamp_approx) {
     connector_.query(sqlite_query_string);
     ASSERT_EQ(connector_.getNumRows(), mapd_results->rowCount());
-    const int num_rows{static_cast<int>(connector_.getNumRows())};
+    //const int num_rows{static_cast<int>(connector_.getNumRows())};
+    const int num_rows = static_cast<int>(connector_.getNumRows());
     if (mapd_results->definitelyHasNoRows()) {
       ASSERT_EQ(0, num_rows);
       return;
@@ -176,7 +177,8 @@ class SQLiteComparator {
       return;
     }
     CHECK_EQ(connector_.getNumCols(), mapd_results->colCount());
-    const int num_cols{static_cast<int>(connector_.getNumCols())};
+    //const int num_cols{static_cast<int>(connector_.getNumCols())};
+    const int num_cols = static_cast<int>(connector_.getNumCols());
     for (int row_idx = 0; row_idx < num_rows; ++row_idx) {
       const auto crt_row = mapd_results->getNextRow(true, true);
       CHECK(!crt_row.empty());

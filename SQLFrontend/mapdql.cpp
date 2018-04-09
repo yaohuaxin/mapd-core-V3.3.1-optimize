@@ -1349,8 +1349,11 @@ int main(int argc, char** argv) {
               std::cout << "No rows returned." << std::endl;
             }
             if (print_timing) {
-              std::cout << "Execution time: " << context.query_return.execution_time_ms << " ms,"
-                        << " Total time: " << context.query_return.total_time_ms << " ms" << std::endl;
+              std::cout << "Parsing time: " << context.query_return.parsing_time_ms << " ms, "
+                        << "Queue time: " << context.query_return.queue_time_ms << " ms, "
+                        << "Execution time: " << context.query_return.execution_time_ms << " ms, "
+                        << "Convert to row: " << context.query_return.convert_to_row_time_ms << " ms, "
+                        << "Total time: " << context.query_return.total_time_ms << " ms" << std::endl;
             }
             continue;
           }
@@ -1379,8 +1382,11 @@ int main(int argc, char** argv) {
           }
           if (print_timing) {
             std::cout << row_count << " rows returned." << std::endl;
-            std::cout << "Execution time: " << context.query_return.execution_time_ms << " ms,"
-                      << " Total time: " << context.query_return.total_time_ms << " ms" << std::endl;
+            std::cout << "Parsing time: " << context.query_return.parsing_time_ms << " ms, "
+                      << "Queue time: " << context.query_return.queue_time_ms << " ms, "
+                      << "Execution time: " << context.query_return.execution_time_ms << " ms, "
+                      << "Convert to row: " << context.query_return.convert_to_row_time_ms << " ms, "
+                      << "Total time: " << context.query_return.total_time_ms << " ms" << std::endl;
           }
         } else {
           (void)backchannel(TURN_OFF, nullptr);

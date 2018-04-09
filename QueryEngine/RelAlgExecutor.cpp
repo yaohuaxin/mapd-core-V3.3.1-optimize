@@ -371,30 +371,35 @@ void RelAlgExecutor::executeRelAlgStep(const size_t i,
   try {
     const auto compound = dynamic_cast<const RelCompound*>(body);
     if (compound) {
+      LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": It is a compound." ;
       exec_desc.setResult(executeCompound(compound, co, eo_work_unit, render_info, queue_time_ms));
       addTemporaryTable(-compound->getId(), exec_desc.getResult().getDataPtr());
       return;
     }
     const auto project = dynamic_cast<const RelProject*>(body);
     if (project) {
+      LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": It is a project." ;
       exec_desc.setResult(executeProject(project, co, eo_work_unit, render_info, queue_time_ms));
       addTemporaryTable(-project->getId(), exec_desc.getResult().getDataPtr());
       return;
     }
     const auto aggregate = dynamic_cast<const RelAggregate*>(body);
     if (aggregate) {
+      LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": It is a aggregate." ;
       exec_desc.setResult(executeAggregate(aggregate, co, eo_work_unit, render_info, queue_time_ms));
       addTemporaryTable(-aggregate->getId(), exec_desc.getResult().getDataPtr());
       return;
     }
     const auto filter = dynamic_cast<const RelFilter*>(body);
     if (filter) {
+      LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": It is a filter." ;
       exec_desc.setResult(executeFilter(filter, co, eo_work_unit, render_info, queue_time_ms));
       addTemporaryTable(-filter->getId(), exec_desc.getResult().getDataPtr());
       return;
     }
     const auto sort = dynamic_cast<const RelSort*>(body);
     if (sort) {
+      LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": It is a sort." ;
       exec_desc.setResult(executeSort(sort, co, eo_work_unit, render_info, queue_time_ms));
       addTemporaryTable(-sort->getId(), exec_desc.getResult().getDataPtr());
       return;
@@ -402,6 +407,7 @@ void RelAlgExecutor::executeRelAlgStep(const size_t i,
 #ifdef ENABLE_JOIN_EXEC
     const auto join = dynamic_cast<const RelJoin*>(body);
     if (join) {
+      LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": It is a join." ;
       exec_desc.setResult(executeJoin(join, co, eo_work_unit, render_info, queue_time_ms));
       addTemporaryTable(-join->getId(), exec_desc.getResult().getDataPtr());
       return;
@@ -409,6 +415,7 @@ void RelAlgExecutor::executeRelAlgStep(const size_t i,
 #endif
     const auto logical_values = dynamic_cast<const RelLogicalValues*>(body);
     if (logical_values) {
+      LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": It is a logical_values." ;
       exec_desc.setResult(executeLogicalValues(logical_values, eo_work_unit));
       addTemporaryTable(-logical_values->getId(), exec_desc.getResult().getDataPtr());
       return;
@@ -1366,6 +1373,7 @@ ExecutionResult RelAlgExecutor::executeWorkUnit(const RelAlgExecutor::WorkUnit& 
                          {}};
 
   try {
+    LOG(INFO) << "Huaxin: " << "Start to execute the query." ;
     result = {executor_->executeWorkUnit(
                   &error_code,
                   max_groups_buffer_entry_guess,
@@ -1380,6 +1388,7 @@ ExecutionResult RelAlgExecutor::executeWorkUnit(const RelAlgExecutor::WorkUnit& 
                   groups_approx_upper_bound(table_infos) <= big_group_threshold),
               targets_meta};
   } catch (const CardinalityEstimationRequired&) {
+    LOG(INFO) << "Huaxin: " << ": Start to execute the query again." ;
     max_groups_buffer_entry_guess =
         2 * std::min(groups_approx_upper_bound(table_infos), getNDVEstimation(work_unit, is_agg, co, eo));
     CHECK_GT(max_groups_buffer_entry_guess, size_t(0));
@@ -1400,6 +1409,7 @@ ExecutionResult RelAlgExecutor::executeWorkUnit(const RelAlgExecutor::WorkUnit& 
 
   result.setQueueTime(queue_time_ms);
   if (!error_code) {
+    LOG(INFO) << "Huaxin, Line: " << __LINE__ << ": Execute the query, and have not a error." ;
     return result;
   }
   handlePersistentError(error_code);

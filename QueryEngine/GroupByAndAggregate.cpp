@@ -824,6 +824,7 @@ std::vector<int64_t*> QueryExecutionContext::launchGpuCode(const RelAlgExecution
                                                            const uint32_t num_tables,
                                                            const std::vector<int64_t>& join_hash_tables,
                                                            RenderAllocatorMap* render_allocator_map) {
+  // TODO can this run in multiThreads?
 #ifdef HAVE_CUDA
   bool is_group_by{!query_mem_desc_.group_col_widths.empty()};
   data_mgr->cudaMgr_->setContext(device_id);

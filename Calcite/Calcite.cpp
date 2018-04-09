@@ -244,7 +244,7 @@ string Calcite::processImpl(const Catalog_Namespace::SessionInfo& session_info,
   string session = session_info.get_session_id();
   string catalog = cat.get_currentDB().dbName;
 
-  LOG(INFO) << "User " << user << " catalog " << catalog << " sql '" << sql_string << "'";
+  LOG(INFO) << "User: " << user << ", catalog: " << catalog << ", sql: '" << sql_string << "'";
   if (server_available_) {
     TPlanResult ret;
     try {

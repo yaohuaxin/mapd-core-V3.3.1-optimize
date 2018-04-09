@@ -79,6 +79,7 @@ class GlobalFileMgr : public AbstractBufferMgr {  // implements
   }
 
   virtual void fetchBuffer(const ChunkKey& key, AbstractBuffer* destBuffer, const size_t numBytes) {
+    LOG(INFO) << "Function: [" << __FUNCTION__ << "] " << "Thread ID: " << std::this_thread::get_id() << ": " << "Huaxin: ";
     return getFileMgr(key)->fetchBuffer(key, destBuffer, numBytes);
   }
 
